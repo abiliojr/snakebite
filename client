@@ -1,37 +1,29 @@
 #!/usr/bin/env sh
 
 # quick script that retrieves the peers from the fang server, and updates
-# the local list, with the intention of puncturing holes through NATs
-# it requires the wireguard interface to be already connected
+# the local list, with the intention of punching holes through the NAT
+# it requires the wireguard interface to be up
 
-max_retries=${MAX_RETRIES:-10}
-wait_for_answer=${MAX_WAIT_FOR_ANSWER:-0.5}
+set -e
 
 if [ ${#} -ne 3 ]; then
-	echo "check your arguments: ${0} <local interface name> <remote interface name> <fang server ip:port>"
+	echo "check your arguments: ${0} <wg interface> <fang server ip> <fang server port>"
 	exit 1
 fi
 
 local_interface="${1}"
-remote_interface="${2}"
-fang_server="${3}"
+fang_server_ip="${2}"
+fang_server_port="${3}"
 
-if ! peers=$(
-	curl \
-		--silent \
-		--retry "${max_retries}" \
-		--max-time "${wait_for_answer}" \
-		--header "interface: ${remote_interface}" \
-		"http://${fang_server}/peers"
-); then
+if ! peers=$(socat "TCP:${fang_server_ip}:${fang_server_port}" -); then
 	echo "couldn't get the list of peers"
 	exit 1
 fi
 
-PEERS_FILE=$(mktemp)
+PEERS_FILE=$(mktemp /tmp/snakebite.XXXXXX)
 
-wg-quick strip "${local_interface}" >"${PEERS_FILE}" # get the base from wg-quick
-echo "${peers}" >>"${PEERS_FILE}"
+wg showconf "${local_interface}" >"${PEERS_FILE}" # use local configuration as base
+echo "${peers}" >>"${PEERS_FILE}" # and append the response
 
 wg syncconf "${local_interface}" "${PEERS_FILE}"
 rm "${PEERS_FILE}"

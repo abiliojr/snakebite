@@ -1,36 +1,16 @@
 #!/usr/bin/env sh
 
-# this is a very crude way to serve wg info over HTTP
-# the script will call itself
+# this is a very crude way to serve wg peers info over TCP
 
-router() {
-	req=$(awk 'BEGIN{RS="\r\n\r\n"} {print; exit}') # read request from stdin until empty lines
-	req_path=$(echo "${req}" | grep 'GET' | cut -d' ' -f2)
+set -e
 
-	printf "HTTP/1.0 200\r\n\r\n"
-
-	case "${req_path}" in
-	'/peers')
-		interface=$(echo "${req}" | grep interface | awk -F ': ' '{print $2}')
-		wg showconf "${interface}" | grep -v 'PrivateKey' | grep -A1000000 "\[Peer\]"
-		;;
-	*)
-		echo "invalid path"
-		;;
-	esac
-}
-
-if [ "${INSIDE_SOCAT_SERVER}" = "inside" ]; then
-	router
-else
-	if [ ${#} -ne 2 ]; then
-		echo "check your arguments: ${0} <bind interface name> <server port>"
-		exit 1
-	fi
-
-	interface=${1}
-	port=${2}
-
-	export INSIDE_SOCAT_SERVER=inside
-	socat TCP-LISTEN:"${port}",reuseaddr,fork,INTERFACE="${interface}" system:"${0}"
+if [ ${#} -ne 3 ]; then
+	echo "check your arguments: ${0} <wg interface> <listen ip> <listen port>"
+	exit 1
 fi
+
+interface=${1}
+listen_ip=${2}
+listen_port=${3}
+
+socat "tcp-listen:${listen_port},reuseaddr,fork,bind=${listen_ip}" "system:wg showconf ${interface} | grep -v PrivateKey | grep -A1000000 Peer"
