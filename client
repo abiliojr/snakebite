@@ -11,9 +11,4 @@ if [ ${#} -ne 3 ]; then
 	exit 1
 fi
 
-TIMEOUT=2
-local_interface="${1}"
-fang_server_ip="${2}"
-fang_server_port="${3}"
-
-wg addconf "${local_interface}" <(socat "TCP:${fang_server_ip}:${fang_server_port}",connect-timeout=${TIMEOUT} -)
+wg addconf "${1}" <(socat "TCP:${2}:${3}",connect-timeout=2 -)

@@ -9,8 +9,4 @@ if [ ${#} -ne 3 ]; then
 	exit 1
 fi
 
-interface=${1}
-listen_ip=${2}
-listen_port=${3}
-
-socat "tcp-listen:${listen_port},reuseaddr,fork,bind=${listen_ip}" "system:wg showconf ${interface} | grep -v PrivateKey | grep -A1000000 Peer"
+socat "tcp-listen:${3},reuseaddr,fork,bind=${2}" "system:wg showconf ${1} | grep -v PrivateKey | grep -A1000000 Peer"
