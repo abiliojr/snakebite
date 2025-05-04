@@ -16,14 +16,4 @@ local_interface="${1}"
 fang_server_ip="${2}"
 fang_server_port="${3}"
 
-PEERS_FILE=$(mktemp /tmp/snakebite.XXXXXX)
-trap 'rm "${PEERS_FILE}"' EXIT
-
-wg showconf "${local_interface}" > "${PEERS_FILE}" # use local configuration as base
-
-if ! socat "TCP:${fang_server_ip}:${fang_server_port}",connect-timeout=${TIMEOUT} OPEN:"${PEERS_FILE}",append; then
-	echo "couldn't get the list of peers"
-	exit 1
-fi
-
-wg syncconf "${local_interface}" "${PEERS_FILE}"
+wg addconf "${local_interface}" <(socat "TCP:${fang_server_ip}:${fang_server_port}",connect-timeout=${TIMEOUT} -)
