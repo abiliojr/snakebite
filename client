@@ -22,9 +22,9 @@ if ! peers=$(socat "TCP:${fang_server_ip}:${fang_server_port}",connect-timeout=$
 fi
 
 PEERS_FILE=$(mktemp /tmp/snakebite.XXXXXX)
+trap 'rm "${PEERS_FILE}"' EXIT
 
-wg showconf "${local_interface}" >"${PEERS_FILE}" # use local configuration as base
-echo "${peers}" >>"${PEERS_FILE}" # and append the response
+wg showconf "${local_interface}" > "${PEERS_FILE}" # use local configuration as base
+echo "${peers}" >> "${PEERS_FILE}" # and append the response
 
 wg syncconf "${local_interface}" "${PEERS_FILE}"
-rm "${PEERS_FILE}"
