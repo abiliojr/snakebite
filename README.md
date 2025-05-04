@@ -47,3 +47,5 @@ To accomplish this, two scripts are provided:
 - Fixing the `ListenPort` on the client interface allows to bring it down and up while keeping the holes punched.
 
 - You can always automate running the client by using `PostUp` in the WireGuard configuration file.
+
+- Preshared keys are not transferred. You'll need to include the peers (i.e., public key) and their preshared-keys into the base configuration file. A less secure alternative is to disable the removal on the server side.
