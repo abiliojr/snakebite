@@ -11,11 +11,12 @@ if [ ${#} -ne 3 ]; then
 	exit 1
 fi
 
+TIMEOUT=2
 local_interface="${1}"
 fang_server_ip="${2}"
 fang_server_port="${3}"
 
-if ! peers=$(socat "TCP:${fang_server_ip}:${fang_server_port}" -); then
+if ! peers=$(socat "TCP:${fang_server_ip}:${fang_server_port}",connect-timeout=${TIMEOUT} -); then
 	echo "couldn't get the list of peers"
 	exit 1
 fi
